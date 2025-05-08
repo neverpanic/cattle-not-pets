@@ -10,12 +10,12 @@ Network=podman1.network
 Image=docker.io/jellyfin/jellyfin:latest
 Pull=always
 AutoUpdate=registry
-User=core
+User=1000
 UserNS=keep-id
 
 AddDevice=/dev/dri:/dev/dri
-Volume=/var/mnt/media/jellyfin/config:/config
-Volume=/var/mnt/media/jellyfin/cache:/cache
+Volume=/var/local/containers/jellyfin/config:/config:z
+Volume=/var/local/containers/jellyfin/cache:/cache:z
 Volume=/var/mnt/media/Filme:/media
 
 HealthCmd=curl --silent --show-error --fail-with-body http://localhost:8096/health
@@ -29,7 +29,7 @@ Label=traefik.http.routers.jellyfin.rule=PathPrefix(`/jellyfin`)
 Label=traefik.http.services.jellyfin.loadbalancer.server.port=8089
 
 [Service]
-Restart=Always
+Restart=always
 TimeoutStartSec=900
 SuccessExitStatus=0 143
 

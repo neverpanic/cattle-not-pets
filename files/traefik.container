@@ -25,7 +25,7 @@ SecurityLabelType=container_runtime_t
 Volume=/var/run/podman/podman.sock:/var/run/docker.sock:z
 
 [Service]
-Restart=Always
+Restart=always
 TimeoutStartSec=900
 
 [Install]
