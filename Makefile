@@ -42,7 +42,7 @@ $(COREOS_IMAGE):
 			-a $(ARCH) \
 			-f iso \
 			-d
-	mv fedora-coreos-*.*-live.$(ARCH).iso \
+	mv fedora-coreos-*.*-live-iso.$(ARCH).iso \
 		"$@"
 
 $(MODIFIED_IMAGE): config.ign $(COREOS_IMAGE)
