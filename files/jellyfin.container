@@ -20,8 +20,8 @@ Volume=/var/mnt/media/Filme:/media
 
 HealthCmd=curl --silent --show-error --fail-with-body http://localhost:8096/health
 HealthTimeout=15s
-HealthInterval=1m30s
-HealthStartPeriod=30s
+HealthInterval=1m
+HealthStartPeriod=20s
 HealthRetries=5
 
 Label=traefik.enable=true
