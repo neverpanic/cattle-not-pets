@@ -59,7 +59,7 @@ storage:
       group:
         id: 1000
   files:
-    # For predicable IPv6 addresses, disable privacy address generation mode
+    # For predictable IPv6 addresses, disable privacy address generation mode
     - path: "/etc/NetworkManager/conf.d/90-override-eui64.conf"
       mode: 0600
       contents:
