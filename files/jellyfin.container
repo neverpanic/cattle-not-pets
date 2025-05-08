@@ -25,8 +25,8 @@ HealthStartPeriod=30s
 HealthRetries=5
 
 Label=traefik.enable=true
-Label=traefik.http.routers.jellyfin.rule=PathPrefix(`/jellyfin`)
-Label=traefik.http.services.jellyfin.loadbalancer.server.port=8089
+Label=traefik.http.routers.jellyfin.rule=PathPrefix(`/`)
+Label=traefik.http.services.jellyfin.loadbalancer.server.port=8096
 
 [Service]
 Restart=always
