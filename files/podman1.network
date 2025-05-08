@@ -1,0 +1,8 @@
+[Unit]
+Description=Podman Network for Grafana
+
+[Network]
+IPv6=true
+
+[Install]
+WantedBy=default.target

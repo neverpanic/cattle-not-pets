@@ -77,16 +77,6 @@ storage:
         name: "root"
       group:
         name: "root"
-    # Configuration for the traefik reverse proxy
-    - path: "/var/local/containers/traefik/traefik.yml"
-      overwrite: true
-      contents:
-        local: "traefik/traefik.yml"
-      mode: 0600
-      user:
-        name: "root"
-      group:
-        name: "root"
     # Container definition for the jellyfin container
     - path: "/etc/containers/systemd/jellyfin.container"
       overwrite: true
