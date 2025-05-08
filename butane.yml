@@ -48,6 +48,16 @@ storage:
         name: "root"
       group:
         name: "root"
+    - path: "/var/local/containers/jellyfin/config"
+      user:
+        id: 1000
+      group:
+        id: 1000
+    - path: "/var/local/containers/jellyfin/cache"
+      user:
+        id: 1000
+      group:
+        id: 1000
   files:
     # For predicable IPv6 addresses, disable privacy address generation mode
     - path: "/etc/NetworkManager/conf.d/90-override-eui64.conf"
