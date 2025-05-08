@@ -1,0 +1,37 @@
+[Unit]
+Description=Jellyfin media server
+Requires=var-mnt-media.mount
+After=var-mnt-media.mount
+Wants=var-mnt-media.mount
+
+[Container]
+ContainerName=jellyfin
+Network=podman1.network
+Image=docker.io/jellyfin/jellyfin:latest
+Pull=always
+AutoUpdate=registry
+User=core
+UserNS=keep-id
+
+AddDevice=/dev/dri:/dev/dri
+Volume=/var/mnt/media/jellyfin/config:/config
+Volume=/var/mnt/media/jellyfin/cache:/cache
+Volume=/var/mnt/media/Filme:/media
+
+HealthCmd=curl --silent --show-error --fail-with-body http://localhost:8096/health
+HealthTimeout=15s
+HealthInterval=1m30s
+HealthStartPeriod=30s
+HealthRetries=5
+
+Label=traefik.enable=true
+Label=traefik.http.routers.jellyfin.rule=PathPrefix(`/jellyfin`)
+Label=traefik.http.services.jellyfin.loadbalancer.server.port=8089
+
+[Service]
+Restart=Always
+TimeoutStartSec=900
+SuccessExitStatus=0 143
+
+[Install]
+WantedBy=default.target

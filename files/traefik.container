@@ -1,0 +1,32 @@
+[Unit]
+Description=Traefik proxy for Jellyfin
+Requires=podman.socket
+After=network-online.target podman.socket
+Wants=network-online.target podman.socket
+
+[Container]
+ContainerName=traefik
+Network=podman1.network
+Image=docker.io/library/traefik:latest
+Exec=--providers.docker=true --api.insecure=true
+Pull=always
+Sysctl=net.ipv4.ip_unprivileged_port_start=0
+PublishPort=80:80
+PublishPort=8080:8080
+HealthCmd=traefik healthcheck --ping
+HealthTimeout=15s
+HealthInterval=1m30s
+HealthStartPeriod=30s
+HealthRetries=5
+AutoUpdate=registry
+
+# Security label required to talk to podman socket
+SecurityLabelType=container_runtime_t
+Volume=/var/run/podman/podman.sock:/var/run/docker.sock:z
+
+[Service]
+Restart=Always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=default.target

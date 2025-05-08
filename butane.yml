@@ -1,0 +1,169 @@
+---
+variant: fcos
+version: 1.6.0
+passwd:
+  users:
+    - name: core
+      ssh_authorized_keys:
+        - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDCYTdAv7RiXHbxmRoqE4EDZFk9w1E2Zb+qC4KpWMk39SYJ0G6TytGfSy35lpZxrrpgD+pZWSA0F4mC/KzIwC3+0F8YLkq9s2adn2vyWiLxnC6yi+CkMSv0YFtriSzs8+3COGbVgW1zGldeMwuVnaLvD1VqydmcTReBYno/Bq9GQ6IGM35DvQY75fzi0Qks4xEgDmKKY3ZhuJk02jRVJldoru9P02bVg+5/SYgiv4zwlFOm1WDpsGCIi0mjvOEXYe9CssT3EC4WwhV+JqxcUlhVnc/xrV3cExD340FuR0LaCLKk5qZx2kzmKTZU6cMK1myZx2Q1S3NHQ5zJRitLR8xsDLQOpamJYPXUhPIwR5TR+oKkJSz6jSDHxtv48nh1mcXxX2G/qhK+u7aIkQUEysWJCsw8JQ1iJ+2+ytHVIHFCVxRvcR4KlWgvqSZiKaAjsDs8mgDcRTl9Qe6paC4UlEBgj4mqeSq/vaamirY/h+IL3T6hLuSfztlM0kemNVTAwQBhQCaZC+zGJShI7J2mz6cZF3fw4JSuWSLKXryCXlq+k8BSyaK8KyGJXDZT5tcPI20vzw22vKI6VAxkKReYGiEdfZ4SCaajYrNxvTfCFpKuXztbxqKIsAJVCnZbVMLhQId8TnJNprvY8y5VyOkmypXDOXbdoggbQKnzD02fMYfQyw== cardno:10_938_965
+storage:
+  directories:
+    # Folder for rpm-ostree-install hack
+    - path: "/var/cache/rpm-ostree-install"
+      user:
+        name: "root"
+      group:
+        name: "root"
+    # Folder for podman quadlets
+    - path: "/etc/containers/systemd"
+      user:
+        name: "root"
+      group:
+        name: "root"
+    # Folders for storage of containers
+    - path: "/var/local"
+      user:
+        name: "root"
+      group:
+        name: "root"
+    - path: "/var/local/containers"
+      user:
+        name: "root"
+      group:
+        name: "root"
+    # Traefik container configuration and logfiles
+    - path: "/var/local/containers/traefik"
+      user:
+        name: "root"
+      group:
+        name: "root"
+    - path: "/var/local/containers/traefik/var"
+      user:
+        name: "root"
+      group:
+        name: "root"
+    # Jellyfin container configuration
+    - path: "/var/local/containers/jellyfin"
+      user:
+        name: "root"
+      group:
+        name: "root"
+  files:
+    # For predicable IPv6 addresses, disable privacy address generation mode
+    - path: "/etc/NetworkManager/conf.d/90-override-eui64.conf"
+      mode: 0600
+      contents:
+        inline: |
+          [connection-90-override-eui64]
+          match-device=type:ethernet
+          ipv6.addr-gen-mode=0
+    # Create a podman network with IPv6 support
+    - path: "/etc/containers/systemd/podman1.network"
+      overwrite: true
+      contents:
+        local: "podman1.network"
+      mode: 0600
+      user:
+        name: "root"
+      group:
+        name: "root"
+    # Container definition for the traefik reverse proxy
+    - path: "/etc/containers/systemd/traefik.container"
+      overwrite: true
+      contents:
+        local: "traefik.container"
+      mode: 0600
+      user:
+        name: "root"
+      group:
+        name: "root"
+    # Configuration for the traefik reverse proxy
+    - path: "/var/local/containers/traefik/traefik.yml"
+      overwrite: true
+      contents:
+        local: "traefik/traefik.yml"
+      mode: 0600
+      user:
+        name: "root"
+      group:
+        name: "root"
+    # Container definition for the jellyfin container
+    - path: "/etc/containers/systemd/jellyfin.container"
+      overwrite: true
+      contents:
+        local: "jellyfin.container"
+      mode: 0600
+      user:
+        name: "root"
+      group:
+        name: "root"
+    # Credentials file for the SMB mount
+    - path: "/var/local/containers/jellyfin/smb.cred"
+      overwrite: true
+      contents:
+        local: "smb.cred"
+      mode: 0600
+      user:
+        name: "root"
+      group:
+        name: "root"
+systemd:
+  units:
+    # Support installation additional packages using rpm-ostree
+    # This is an ugly hack, but there doesn't seem to be anything better. For
+    # reference, see:
+    #  - https://docs.fedoraproject.org/en-US/fedora-coreos/os-extensions/#_example_layering_vim_and_setting_it_as_the_default_editor
+    #  - https://github.com/coreos/butane/issues/81
+    #  - https://github.com/coreos/fedora-coreos-tracker/issues/681
+    - name: "rpm-ostree-install@.service"
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Layer %i with rpm-ostree
+        Wants=network-online.target
+        After=network-online.target
+        Before=zincati.service
+        ConditionPathExists=!/var/cache/rpm-ostree-install/%i.stamp
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        ExecStart=/usr/bin/flock var/cache/rpm-ostree-install/.lock -c "(/usr/bin/rpm-ostree install --assumeyes --idempotent --reboot --allow-inactive %i | tee /var/cache/rpm-ostree-install/%i.log) && touch /var/cache/rpm-ostree-install/%i.stamp"
+
+        [Install]
+        WantedBy=multi-user.target
+    # Add SMB mounts to be consumed by Jellyfin
+    - name: "var-mnt-media.mount"
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Mount Jellyfin media directory
+        Requires=network-online.target
+        After=network-online.target systemd-resolved.service
+        Wants=network-online.target systemd-resolved.service
+
+        [Mount]
+        What=//nas.lcl.neverpanic.de/media
+        Where=/var/mnt/media
+        Type=cifs
+        Options=rw,uid=core,gid=core,credentials=/var/local/containers/jellyfin/smb.cred,iocharset=utf8,file_mode=0644,dir_mode=0755
+        TimeoutSec=60
+
+        [Install]
+        WantedBy=multi-user.target
+    - name: "var-mnt-media.automount"
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Automatically mount Jellyfin media directory
+        Requires=remote-fs-pre.target
+        After=remote-fs-pre.target
+
+        [Install]
+        WantedBy=remote-fs.target
+    # Enable podman socket to be used by traefik
+    - name: "podman.socket"
+      enabled: true
+    # Enable automatic container updates using podman
+    - name: "podman-auto-update.timer"
+      enabled: true
