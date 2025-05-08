@@ -7,27 +7,6 @@ MODIFIED_IMAGE = fedora-coreos-jellyfin.$(ARCH).iso
 
 all: config.ign $(MODIFIED_IMAGE)
 
-up: $(MODIFIED_IMAGE)
-	rsync \
-		--partial \
-		--progress \
-		--inplace \
-		"$<" \
-		clemens@nas.lcl.neverpanic.de:
-
-config.ign: butane.yml $(FILES)
-	podman run \
-		--rm \
-		--interactive \
-		--volume "$$PWD:/work" \
-		--workdir /work \
-		quay.io/coreos/butane:release \
-			--pretty \
-			--strict \
-			"$<" \
-			--files-dir files \
-			>"$@"
-
 $(COREOS_IMAGE):
 	podman pull \
 		quay.io/coreos/coreos-installer:release
@@ -45,6 +24,19 @@ $(COREOS_IMAGE):
 	mv fedora-coreos-*.*-live-iso.$(ARCH).iso \
 		"$@"
 
+config.ign: butane.yml $(FILES)
+	podman run \
+		--rm \
+		--interactive \
+		--volume "$$PWD:/work" \
+		--workdir /work \
+		quay.io/coreos/butane:release \
+			--pretty \
+			--strict \
+			"$<" \
+			--files-dir files \
+			>"$@"
+
 $(MODIFIED_IMAGE): config.ign $(COREOS_IMAGE)
 	rm -f "$@"
 	podman run \
@@ -61,6 +53,14 @@ $(MODIFIED_IMAGE): config.ign $(COREOS_IMAGE)
 			--force \
 			-o "$@" \
 			"$(COREOS_IMAGE)"
+
+up: $(MODIFIED_IMAGE)
+	rsync \
+		--partial \
+		--progress \
+		--inplace \
+		"$<" \
+		clemens@nas.lcl.neverpanic.de:
 
 clean:
 	$(RM) config.ign $(COREOS_IMAGE) $(MODIFIED_IMAGE)
