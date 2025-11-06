@@ -1,8 +1,8 @@
 [Unit]
 Description=Jellyfin media server
-Requires=var-mnt-media.mount
-After=var-mnt-media.mount
-Wants=var-mnt-media.mount
+Requires=podman.socket
+After=network-online.target podman.socket
+Wants=network-online.target podman.socket
 
 [Container]
 ContainerName=jellyfin
