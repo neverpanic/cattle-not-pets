@@ -1,11 +1,13 @@
-.PHONY: all clean up
+.PHONY: all clean run
 
 FILES = $(wildcard files/*)
-ARCH = x86_64
-COREOS_IMAGE = fedora-coreos-live.$(ARCH).iso
-MODIFIED_IMAGE = fedora-coreos-jellyfin.$(ARCH).iso
+PLATFORM = applehv
+FORMAT = raw.gz
+ARCH = aarch64
+COREOS_IMAGE = fedora-coreos-$(PLATFORM).$(ARCH).raw
+MODIFIED_IMAGE = fedora-coreos-jellyfin-$(PLATFORM).$(ARCH).raw
 
-all: config.ign $(MODIFIED_IMAGE)
+all: config.ign $(COREOS_IMAGE)
 
 $(COREOS_IMAGE):
 	podman pull \
@@ -18,11 +20,12 @@ $(COREOS_IMAGE):
 		quay.io/coreos/coreos-installer:release \
 		download \
 			-s stable \
-			-a $(ARCH) \
-			-f iso \
+			-a "$(ARCH)" \
+			-p "$(PLATFORM)" \
+			-f "$(FORMAT)" \
 			-d
-	mv fedora-coreos-*.*-live-iso.$(ARCH).iso \
-		"$@"
+	mv fedora-coreos-*-"$(PLATFORM)"."$(ARCH)".raw \
+		$(COREOS_IMAGE)
 
 config.ign: butane.yml $(FILES)
 	podman run \
@@ -54,16 +57,23 @@ $(MODIFIED_IMAGE): config.ign $(COREOS_IMAGE)
 			-o "$@" \
 			"$(COREOS_IMAGE)"
 
-up: $(MODIFIED_IMAGE)
-	rsync \
-		--partial \
-		--progress \
-		--inplace \
-		"$<" \
-		clemens@nas.lcl.neverpanic.de:
+run: config.ign $(COREOS_IMAGE)
+	cp -c "$(COREOS_IMAGE)" "$(MODIFIED_IMAGE)"
+	vfkit \
+		--cpus 4 \
+		--memory 4096 \
+		--bootloader efi,variable-store="$(MODIFIED_IMAGE).efivars",create \
+		--device virtio-blk,path="$(MODIFIED_IMAGE)" \
+		--device virtio-net,nat \
+		--ignition config.ign \
+		--device virtio-input,keyboard \
+		--device virtio-input,pointing \
+		--device virtio-gpu,width=1920,height=1200 \
+		--gui
+	rm -f "$(MODIFIED_IMAGE)" "$(MODIFIED_IMAGE).efivars"
 
 clean:
-	$(RM) config.ign $(COREOS_IMAGE) $(MODIFIED_IMAGE)
+	$(RM) config.ign "$(COREOS_IMAGE)" "$(MODIFIED_IMAGE)" "$(MODIFIED_IMAGE).efivars"
 
 butane-example.png: butane-example.yml
 	pygmentize-3.12 \

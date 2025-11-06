@@ -97,16 +97,6 @@ storage:
         name: "root"
       group:
         name: "root"
-    # Credentials file for the SMB mount
-    - path: "/var/local/containers/jellyfin/smb.cred"
-      overwrite: true
-      contents:
-        local: "smb.cred"
-      mode: 0600
-      user:
-        name: "root"
-      group:
-        name: "root"
 systemd:
   units:
     # Support installation additional packages using rpm-ostree
@@ -132,35 +122,6 @@ systemd:
 
         [Install]
         WantedBy=multi-user.target
-    # Add SMB mounts to be consumed by Jellyfin
-    - name: "var-mnt-media.mount"
-      enabled: true
-      contents: |
-        [Unit]
-        Description=Mount Jellyfin media directory
-        Requires=network-online.target
-        After=network-online.target systemd-resolved.service
-        Wants=network-online.target systemd-resolved.service
-
-        [Mount]
-        What=//nas.lcl.neverpanic.de/media
-        Where=/var/mnt/media
-        Type=cifs
-        Options=rw,uid=core,gid=core,credentials=/var/local/containers/jellyfin/smb.cred,iocharset=utf8,file_mode=0644,dir_mode=0755
-        TimeoutSec=60
-
-        [Install]
-        WantedBy=multi-user.target
-    - name: "var-mnt-media.automount"
-      enabled: true
-      contents: |
-        [Unit]
-        Description=Automatically mount Jellyfin media directory
-        Requires=remote-fs-pre.target
-        After=remote-fs-pre.target
-
-        [Install]
-        WantedBy=remote-fs.target
     # Enable podman socket to be used by traefik
     - name: "podman.socket"
       enabled: true

@@ -16,7 +16,6 @@ UserNS=keep-id
 AddDevice=/dev/dri:/dev/dri
 Volume=/var/local/containers/jellyfin/config:/config:z
 Volume=/var/local/containers/jellyfin/cache:/cache:z
-Volume=/var/mnt/media/Filme:/media
 
 HealthCmd=curl --silent --show-error --fail-with-body http://localhost:8096/health
 HealthTimeout=15s
