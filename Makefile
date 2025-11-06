@@ -64,3 +64,19 @@ up: $(MODIFIED_IMAGE)
 
 clean:
 	$(RM) config.ign $(COREOS_IMAGE) $(MODIFIED_IMAGE)
+
+butane-example.png: butane-example.yml
+	pygmentize-3.12 \
+		-l yaml \
+		-o $@ \
+		-O style=monokai,font_name="RedHatMono-Medium",font_size=22,line_numbers=False \
+		-f png \
+		$<
+
+jellyfin-quadlet.png: files/jellyfin.container
+	pygmentize-3.12 \
+		-l systemd \
+		-o $@ \
+		-O style=monokai,font_name="RedHatMono-Medium",font_size=22,line_numbers=False \
+		-f png \
+		$<
