@@ -8,7 +8,7 @@ Wants=network-online.target podman.socket
 ContainerName=traefik
 Network=podman1.network
 Image=docker.io/library/traefik:latest
-Exec=--providers.docker=true --api.insecure=true
+Exec=--providers.docker=true --api.insecure=true --ping
 Pull=always
 Sysctl=net.ipv4.ip_unprivileged_port_start=0
 PublishPort=80:80
